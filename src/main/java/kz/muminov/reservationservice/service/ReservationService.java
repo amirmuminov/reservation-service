@@ -21,7 +21,7 @@ public class ReservationService {
 
     public Reservation reserveTable(Reservation reservation){
 
-        Employee employee = restTemplate.getForObject("http://localhost:8082/employee/" + reservation.getEmployee().getId(), Employee.class);
+        Employee employee = restTemplate.getForObject("http://employee-service/employee/" + reservation.getEmployee().getId(), Employee.class);
 
         Table table = tableService.getTable(reservation.getTable().getId());
 
