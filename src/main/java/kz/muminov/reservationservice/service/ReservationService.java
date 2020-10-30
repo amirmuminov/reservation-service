@@ -1,5 +1,7 @@
 package kz.muminov.reservationservice.service;
 
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import kz.muminov.reservationservice.model.entity.Employee;
 import kz.muminov.reservationservice.model.entity.Reservation;
 import kz.muminov.reservationservice.model.entity.Table;
@@ -7,18 +9,29 @@ import kz.muminov.reservationservice.repository.ReservationRepository;
 import kz.muminov.reservationservice.util.ExceptionUtils;
 import kz.muminov.reservationservice.util.MessageCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final TableService tableService;
     private final ExceptionUtils exceptionUtils;
     private final RestTemplate restTemplate;
-
+    
+    @HystrixCommand(
+            fallbackMethod = "reserveTableFallback",
+            threadPoolProperties = {
+                    @HystrixProperty(name = "coreSize", value = "100"),
+                    @HystrixProperty(name = "maximumSize", value = "120"),
+                    @HystrixProperty(name = "maxQueueSize", value = "50"),
+                    @HystrixProperty(name = "allowMaximumSizeToDivergeFromCoreSize", value = "true")
+            }
+    )
     public Reservation reserveTable(Reservation reservation){
 
         Employee employee = restTemplate.getForObject("http://employee-service/employee/" + reservation.getEmployee().getId(), Employee.class);
@@ -48,6 +61,13 @@ public class ReservationService {
 
         return reservationRepository.save(reservation);
 
+    }
+
+    public Reservation reserveTableFallback(Reservation reservation, Throwable e){
+        Reservation newReservation = new Reservation();
+        newReservation.setId(-1L);
+        log.error(e.getMessage());
+        return newReservation;
     }
 
 }
