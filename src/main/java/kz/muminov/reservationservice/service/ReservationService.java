@@ -25,11 +25,10 @@ public class ReservationService {
     
     @HystrixCommand(
             fallbackMethod = "reserveTableFallback",
+            threadPoolKey = "reserveTable",
             threadPoolProperties = {
                     @HystrixProperty(name = "coreSize", value = "100"),
-                    @HystrixProperty(name = "maximumSize", value = "120"),
-                    @HystrixProperty(name = "maxQueueSize", value = "50"),
-                    @HystrixProperty(name = "allowMaximumSizeToDivergeFromCoreSize", value = "true")
+                    @HystrixProperty(name = "maxQueueSize", value = "50")
             }
     )
     public Reservation reserveTable(Reservation reservation){
