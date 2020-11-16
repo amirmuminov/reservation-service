@@ -10,8 +10,13 @@ import kz.muminov.reservationservice.util.ExceptionUtils;
 import kz.muminov.reservationservice.util.MessageCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Base64;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +38,18 @@ public class ReservationService {
     )
     public Reservation reserveTable(Reservation reservation){
 
-        Employee employee = restTemplate.getForObject("http://employee-service/employee/" + reservation.getEmployee().getId(), Employee.class);
+        String credentials = "rest-client:password";
+        String encodedCredentials = new String(Base64.encodeBase64(credentials.getBytes()));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Basic " + encodedCredentials);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        Employee employee = restTemplate.exchange("http://employee-service/employee/" + reservation.getEmployee().getId(),
+                HttpMethod.GET,
+                entity,
+                Employee.class).getBody();
 
         Table table = tableService.getTable(reservation.getTable().getId());
 
