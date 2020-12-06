@@ -42,7 +42,6 @@ public class ReservationService {
         String encodedCredentials = new String(Base64.encodeBase64(credentials.getBytes()));
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Basic " + encodedCredentials);
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
